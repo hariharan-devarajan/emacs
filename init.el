@@ -53,6 +53,9 @@
 
 (use-package no-littering)
 
+(use-package cpputils-cmake)
+(require 'cpputils-cmake)
+
 ;; no-littering doesn't set this by default so we must place
 ;; auto save files in the same path as it uses for sessions
 (setq auto-save-file-name-transforms
@@ -179,7 +182,10 @@
   (ivy-rich-mode 1))
 
 (use-package counsel
-  :bind (("C-M-j" . 'counsel-switch-buffer)
+  :bind (("M-x" . 'counsel-M-x)
+	 ("C-x b" . 'counsel-ibuffer)
+	 ("C-x C-f" . 'counsel-find-file)
+	 ("C-M-j" . 'counsel-switch-buffer)
          :map minibuffer-local-map
          ("C-r" . 'counsel-minibuffer-history))
   :custom
@@ -612,3 +618,10 @@
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+
+(use-package dired-sidebar
+  :ensure t
+  :commands (dired-sidebar-toggle-sidebar)
+  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar)))
+
+
