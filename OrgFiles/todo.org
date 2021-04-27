@@ -1,0 +1,29 @@
+* Heading 1
+Here is *some* text
+Here is the [[https://orgmode.org][Org mode homepage]]
+* Heading 2
+| Name      | Age | Uses Emacs |
+| David     |  37 | Yes        |
+| Alexander |  98 | No         |
+|           |     |            |
+
+- [ ] First Item
+- [ ] Second Item
+- [ ] Third Item
+- [ ]Forth Item
+- [ ] Fifth
+
+* Heading 3
+
+#+begin_src emacs-lisp
+  (defun my-elisp-func ()
+    (message "Hello!"))
+#+end_src
+
+* WAIT Heading 4
+:LOGBOOK:
+- State "WAIT"       from "REVIEW"     [2021-04-25 Sun 19:32] \\
+  need more info
+:END:
+* DONE Heading 5
+

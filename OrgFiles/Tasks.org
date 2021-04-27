@@ -1,0 +1,21 @@
+* Active
+** NEXT Merge PR                                 :@work:email:hermes:
+DEADLINE: <2021-04-30 Fri> SCHEDULED: <2021-04-29 Thu>
+:PROPERTIES:
+:Effort:   2
+:END:
+
+* Backlog
+
+* Inbox 
+
+** TODO This is a quick task
+DEADLINE: <2021-04-30> SCHEDULED: <2021-04-27 Tue>
+  [2021-04-26 Mon 18:38]
+  [[file:~/projects/emacs/init.el::"mw" "Weight" table-line (file+headline "~/projects/emacs/notes/Metrics.org" "Weight"]]
+
+** TODO new task. Lets see if this worked. 
+DEADLINE: <2021-04-30 Fri> SCHEDULED: <2021-04-29 Thu>
+  [2021-04-26 Mon 18:50]
+  [[file:~/projects/emacs/init.el::lambda () (interactive) (org-capture nil "jm"))]]
+

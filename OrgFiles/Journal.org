@@ -1,0 +1,15 @@
+
+
+* 2021
+
+** 2021-04 April
+
+*** 2021-04-26 Monday
+
+**** 06:50 PM - Journal                                          :journal:
+:LOGBOOK:
+CLOCK: [2021-04-26 Mon 18:50]--[2021-04-26 Mon 18:50] =>  0:00
+:END:
+
+This is a new entry. Let see how this looks.
+

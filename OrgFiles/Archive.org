@@ -1,0 +1,7 @@
+* Archive Tasks
+** DONE Finish Documentation
+CLOSED: [2021-04-26 Mon 18:26] SCHEDULED: <2021-04-27 Tue> DEADLINE: <2021-04-30 Fri>
+:LOGBOOK:
+- State "DONE"       from "BACKLOG"    [2021-04-26 Mon 18:26]
+- State "DONE"       from "TODO"       [2021-04-26 Mon 17:36]
+:END:
