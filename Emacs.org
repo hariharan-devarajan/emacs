@@ -187,7 +187,7 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
   (use-package evil
     :init
     (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
+    (setq evil-want-keybinding t)
     (setq evil-want-C-u-scroll t)
     (setq evil-want-C-i-jump nil)
     :config
@@ -792,11 +792,18 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
     (pyvenv-mode 1))
 
 #+end_src
-** C/C++ CMake
+*** C/C++ CMake
 #+begin_src emacs-lisp
-
+  (use-package dap-mode)
   (use-package cpputils-cmake)
   (require 'cpputils-cmake)
+  (which-key-mode)
+  (add-hook 'c-mode-hook 'lsp)
+  (add-hook 'c++-mode-hook 'lsp)
+  (with-eval-after-load 'lsp-mode
+    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+    (require 'dap-cpptools)
+    (yas-global-mode))
 #+end_src
 
 ** Company Mode
