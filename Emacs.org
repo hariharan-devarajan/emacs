@@ -187,11 +187,12 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
   (use-package evil
     :init
     (setq evil-want-integration t)
-    (setq evil-want-keybinding t)
+    (setq evil-want-keybinding nil)
     (setq evil-want-C-u-scroll t)
     (setq evil-want-C-i-jump nil)
     :config
     (evil-mode 1)
+    (setq evil-want-keybinding t)
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
@@ -794,23 +795,28 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
 #+end_src
 *** C/C++ CMake
 #+begin_src emacs-lisp
-  (use-package eglot)
-  (require 'eglot)
-  (which-key-mode)
-  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
-  (dolist (mode '(c-mode-hook
-                c++-mode-hook))
-  (add-hook mode 'eglot-ensure)
-  (add-hook mode (lambda () (lsp-mode t)))
-  (add-hook mode (lambda () (lsp-ui-mode t)))
-  (add-hook mode (lambda () (projectile-register-project-type 'cmake '("CMakeLists.txt")
-                                :project-file "CMakeLists.txt"
-                                :compilation-dir "build"
-                                :configure "cmake %s -B %s -DCMAKE_PREFIX_PATH=~/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-                                :compile "cmake --build . -j"
-                                :test "ctest -VV"
-                                :install "cmake --build . --target install"
-                                :package "cmake --build . --target package"))))
+        (use-package eglot)
+        (require 'eglot)
+        (which-key-mode)
+        (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+        (dolist (mode '(c-mode-hook
+                      c++-mode-hook))
+        (add-hook mode 'eglot-ensure)
+        (add-hook mode (lambda () (lsp-mode t)))
+        (add-hook mode (lambda () (lsp-ui-mode t)))
+        (setq projectile-project-compile-cmd "cmake --build . -j")
+        (setq projectile-project-test-cmd "ctest -VV")
+        (setq projectile-project-configure-cmd "rm -rf build && cmake ./ -B ./build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))
+
+      ;;(projectile-register-project-type 'cmake '("CMakeLists.txt") 
+      ;;                                :project-file "CMakeLists.txt"
+      ;;                               :compilation-dir "build"
+      ;;                                :configure "cmake %s -B %s -DCMAKE_PREFIX_PATH=~/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+      ;;                                :compile "cmake --build . -j"
+      ;;                                :test "ctest -VV"
+      ;;                                :install "cmake --build . --target install"
+      ;;                                :package "cmake --build . --target package")
+
 #+end_src
 
 ** Company Mode
