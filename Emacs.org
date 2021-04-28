@@ -794,16 +794,22 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
 #+end_src
 *** C/C++ CMake
 #+begin_src emacs-lisp
-  (use-package dap-mode)
-  (use-package cpputils-cmake)
-  (require 'cpputils-cmake)
-  (which-key-mode)
-  (add-hook 'c-mode-hook 'lsp)
-  (add-hook 'c++-mode-hook 'lsp)
-  (with-eval-after-load 'lsp-mode
-    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-    (require 'dap-cpptools)
-    (yas-global-mode))
+      ;;(use-package cpputils-cmake)
+      ;;(require 'cpputils-cmake)
+      (use-package eglot)
+      (require 'eglot)
+      (which-key-mode)
+      (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+      (dolist (mode '(c-mode-hook
+                      c++-mode-hook))
+        (add-hook mode 'eglot-ensure)
+        (add-hook mode (lambda () (lsp-mode t)))
+        (add-hook mode (lambda () (lsp-ui-mode t))))
+
+      ;;(with-eval-after-load 'lsp-mode
+      ;;  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+      ;;  (require 'dap-cpptools)
+      ;;  (yas-global-mode))
 #+end_src
 
 ** Company Mode
@@ -844,8 +850,8 @@ We also use [[https://github.com/sebastiencs/company-box][company-box]] to furth
     ("C-c p" . projectile-command-map)
     :init
     ;; NOTE: Set this to the folder where you keep your Git repos!
-    (when (file-directory-p "~/Projects/Code")
-      (setq projectile-project-search-path '("~/Projects/Code")))
+    (when (file-directory-p "~/projects")
+      (setq projectile-project-search-path '("~/projects")))
     (setq projectile-switch-project-action #'projectile-dired))
 
   (use-package counsel-projectile

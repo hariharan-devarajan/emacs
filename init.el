@@ -53,9 +53,6 @@
 
 (use-package no-littering)
 
-(use-package cpputils-cmake)
-(require 'cpputils-cmake)
-
 ;; no-littering doesn't set this by default so we must place
 ;; auto save files in the same path as it uses for sessions
 (setq auto-save-file-name-transforms
@@ -117,7 +114,7 @@
 (use-package evil
   :init
   (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
+  (setq evil-want-keybinding t)
   (setq evil-want-C-u-scroll t)
   (setq evil-want-C-i-jump nil)
   :config
@@ -147,9 +144,7 @@
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
-  :custom ((doom-modeline-height 15))
-  :config
-  (setq doom-modeline-icon 1))
+  :custom ((doom-modeline-height 15)))
 
 (use-package which-key
   :defer 0
@@ -182,10 +177,7 @@
   (ivy-rich-mode 1))
 
 (use-package counsel
-  :bind (("M-x" . 'counsel-M-x)
-	 ("C-x b" . 'counsel-ibuffer)
-	 ("C-x C-f" . 'counsel-find-file)
-	 ("C-M-j" . 'counsel-switch-buffer)
+  :bind (("C-M-j" . 'counsel-switch-buffer)
          :map minibuffer-local-map
          ("C-r" . 'counsel-minibuffer-history))
   :custom
@@ -258,9 +250,7 @@
 (defun efs/org-mode-setup ()
   (org-indent-mode)
   (variable-pitch-mode 1)
-  (auto-fill-mode 0)
-  (visual-line-mode 1)
-  (setq evil-auto-indent nil))
+  (visual-line-mode 1))
 
 (use-package org
   :pin org
@@ -488,6 +478,23 @@
   :config
   (pyvenv-mode 1))
 
+;;(use-package cpputils-cmake)
+;;(require 'cpputils-cmake)
+(use-package eglot)
+(require 'eglot)
+(which-key-mode)
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+(dolist (mode '(c-mode-hook
+                c++-mode-hook))
+  (add-hook mode 'eglot-ensure)
+  (add-hook mode (lambda () (lsp-mode t)))
+  (add-hook mode (lambda () (lsp-ui-mode t))))
+
+;;(with-eval-after-load 'lsp-mode
+;;  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+;;  (require 'dap-cpptools)
+;;  (yas-global-mode))
+
 (use-package company
   :after lsp-mode
   :hook (lsp-mode . company-mode)
@@ -588,6 +595,11 @@
 
   (eshell-git-prompt-use-theme 'powerline))
 
+(use-package dired-sidebar
+  :ensure t
+  :commands (dired-sidebar-toggle-sidebar)
+  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar)))
+
 (use-package dired
   :ensure nil
   :commands (dired dired-jump)
@@ -620,9 +632,3 @@
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
-
-(use-package dired-sidebar
-  :ensure t
-  :commands (dired-sidebar-toggle-sidebar)
-  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar)))
-
