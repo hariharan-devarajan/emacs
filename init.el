@@ -105,8 +105,16 @@
     :keymaps '(normal insert visual emacs)
     :prefix "SPC"
     :global-prefix "C-SPC")
-
   (efs/leader-keys
+    "SPC" '(completion-at-point :which-key "auto complete code")
+    "r" '(xref-find-references :which-key "find references of symbol")
+    "d" '(xref-find-definitions :which-key "find definition of symbol")
+    "m" '(magit-status :which-key "magit status")
+    "p" '(:ignore t :which-key "project")
+    "pC" '(projectile-configure-project :which-key "configure the project")
+    "pc" '(projectile-compile-project :which-key "compile the project")
+    "pr" '(projectile-run-project :which-key "run the project")
+    "pt" '(projectile-test-project :which-key "test the project")
     "t"  '(:ignore t :which-key "toggles")
     "tt" '(counsel-load-theme :which-key "choose theme")
     "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
@@ -480,26 +488,17 @@
   (pyvenv-mode 1))
 
 (use-package eglot)
-  (require 'eglot)
-  (which-key-mode)
-  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
-  (dolist (mode '(c-mode-hook
-                c++-mode-hook))
-  (add-hook mode 'eglot-ensure)
-  (add-hook mode (lambda () (lsp-mode t)))
-  (add-hook mode (lambda () (lsp-ui-mode t)))
-  (setq projectile-project-compile-cmd "cmake --build . -j")
-  (setq projectile-project-test-cmd "ctest -VV")
-  (setq projectile-project-configure-cmd "rm -rf build && cmake ./ -B ./build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))
-
-;;(projectile-register-project-type 'cmake '("CMakeLists.txt") 
-;;                                :project-file "CMakeLists.txt"
-;;                               :compilation-dir "build"
-;;                                :configure "cmake %s -B %s -DCMAKE_PREFIX_PATH=~/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
-;;                                :compile "cmake --build . -j"
-;;                                :test "ctest -VV"
-;;                                :install "cmake --build . --target install"
-;;                                :package "cmake --build . --target package")
+(require 'eglot)
+(which-key-mode)
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+(dolist (mode '(c-mode-hook
+              c++-mode-hook))
+(add-hook mode 'eglot-ensure)
+(add-hook mode (lambda () (lsp-mode t)))
+(add-hook mode (lambda () (lsp-ui-mode t)))
+(setq projectile-project-compile-cmd "cmake --build . -j")
+(setq projectile-project-test-cmd "ctest -VV")
+(setq projectile-project-configure-cmd "rm -rf build && cmake ./ -B ./build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))
 
 (use-package company
   :after lsp-mode
