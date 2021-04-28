@@ -478,22 +478,23 @@
   :config
   (pyvenv-mode 1))
 
-;;(use-package cpputils-cmake)
-;;(require 'cpputils-cmake)
 (use-package eglot)
 (require 'eglot)
 (which-key-mode)
 (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
 (dolist (mode '(c-mode-hook
-                c++-mode-hook))
-  (add-hook mode 'eglot-ensure)
-  (add-hook mode (lambda () (lsp-mode t)))
-  (add-hook mode (lambda () (lsp-ui-mode t))))
-
-;;(with-eval-after-load 'lsp-mode
-;;  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
-;;  (require 'dap-cpptools)
-;;  (yas-global-mode))
+              c++-mode-hook))
+(add-hook mode 'eglot-ensure)
+(add-hook mode (lambda () (lsp-mode t)))
+(add-hook mode (lambda () (lsp-ui-mode t)))
+(add-hook mode (lambda () (projectile-register-project-type 'cmake '("CMakeLists.txt")
+                              :project-file "CMakeLists.txt"
+                              :compilation-dir "build"
+                              :configure "cmake %s -B %s -DCMAKE_PREFIX_PATH=~/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+                              :compile "cmake --build . -j"
+                              :test "ctest -VV"
+                              :install "cmake --build . --target install"
+                              :package "cmake --build . --target package"))))
 
 (use-package company
   :after lsp-mode
