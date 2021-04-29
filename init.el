@@ -40,6 +40,13 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+;; (use-package treemacs)
+;; (use-package treemacs-projectile)
+;; (use-package lsp-treemacs
+;;   :after lsp
+;;   :config
+;;   (treemacs))
+
 (use-package auto-package-update
   :custom
   (auto-package-update-interval 7)
@@ -110,17 +117,24 @@
   (efs/leader-keys
     "SPC" '(completion-at-point :which-key "auto complete code")
     "n" '(:ignore t :which-key "navigation")
-    "nr" '(xref-find-references :which-key "find references of symbol")
-    "nd" '(xref-find-definitions :which-key "find definition of symbol")
+    "nr" '(lsp-treemacs-references :which-key "find references of symbol")
+    "nd" '(lsp-find-definition :which-key "find definition of symbol")
+    "nt" '(lsp-type-definition :which-key "find definition of symbol")
     "r" '(:ignore t :which-key "refactor")
-    "rr" '(srefactor-refactor-at-point :which-key "symantic local symbol refactor")
-    "rg" '(emacs-clang-rename-at-point :which-key "clang global symbol refactor")
+    "ro" '(srefactor-refactor-at-point :which-key "symantic local symbol refactor")
+    "rr" '(lsp-rename :which-key "clang global symbol refactor")
     "m" '(magit-status :which-key "magit status")
     "p" '(:ignore t :which-key "project")
     "pC" '(projectile-configure-project :which-key "configure the project")
     "pc" '(projectile-compile-project :which-key "compile the project")
     "pr" '(projectile-run-project :which-key "run the project")
     "pt" '(projectile-test-project :which-key "test the project")
+    "pv" '(treemacs :which-key "show the project view")
+    "pa" '(treemacs-projectile :which-key "add project to treemacs workspace")
+    "pd" '(treemacs-remove-project-from-workspace :which-key "remove project from treemacs workspace")
+    "f"  '(:ignore t :which-key "source file")
+    "fs" '(lsp-treemacs-symbols :which-key "show symbols in the file")
+    "fr" '(lsp-treemacs-references :which-key "show reference in the file")
     "t"  '(:ignore t :which-key "toggles")
     "tt" '(counsel-load-theme :which-key "choose theme")
     "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
@@ -432,7 +446,9 @@
 
 (defun efs/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  (lsp-headerline-breadcrumb-mode))
+  (lsp-headerline-breadcrumb-mode)
+  (setq lsp-headerline-breadcrumb-enable t)
+  (setq lsp-headerline-breadcrumb-icons-enable t))
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
@@ -493,30 +509,41 @@
   :config
   (pyvenv-mode 1))
 
-(use-package eglot)
-(require 'eglot)
-(require 'emacs-clang-rename)
-(require 'clang-refactor)
-(use-package srefactor)
-(require 'srefactor)
-(which-key-mode)
-;(dolist (mode '(c-mode c++-mode))
-;  (add-hook mode 'eglot-ensure)
-;  (add-to-list 'eglot-server-programs '(mode . ("clangd" "--cross-file-rename"))))
-;(add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
-(add-to-list 'eglot-server-programs '(c++-mode . ("clangd" "--cross-file-rename")))
-(add-to-list 'eglot-server-programs '(c-mode . ("clangd" "--cross-file-rename")))
-(dolist (mode '(c-mode-hook
-              c++-mode-hook))
-(require 'projectile)
-(semantic-mode 1)
-(add-hook mode 'eglot-ensure)
-(add-hook mode (lambda () (lsp-mode t)))
-(add-hook mode (lambda () (lsp-ui-mode t)))
-(add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
-(add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
-(add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -VV")))
-(add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -B " (projectile-project-root) "build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1")))))
+(setq package-selected-packages '(lsp-mode yasnippet lsp-treemacs helm-lsp
+      projectile hydra flycheck company avy helm-xref dap-mode))
+
+  (when (cl-find-if-not #'package-installed-p package-selected-packages)
+    (package-refresh-contents)
+    (mapc #'package-install package-selected-packages))
+
+  ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
+  (helm-mode)
+  (require 'helm-xref)
+  (which-key-mode)
+  (dolist (mode '(c-mode-hook
+                  c++-mode-hook))
+   (add-hook mode 'lsp)
+   (require 'projectile)
+   (semantic-mode 1)
+   (require 'dap-cpptools)
+   (add-hook mode (lambda () (lsp-mode t)))
+   (add-hook mode (lambda () (lsp-ui-mode t)))
+   (add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
+   (add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
+   (add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -vv")))
+   (add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -b "   (projectile-project-root) "build  -dcmake_prefix_path=$home/install -dcmake_export_compile_commands=1"))))
+    )
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1024 1024)
+        treemacs-space-between-root-nodes nil
+        company-idle-delay 0.0
+        company-minimum-prefix-length 1
+        lsp-idle-delay 0.1)  ;; clangd is fast
+
+  (with-eval-after-load 'lsp-mode
+    (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+    (require 'dap-cpptools)
+    (yas-global-mode))
 
 (use-package company
   :after lsp-mode
