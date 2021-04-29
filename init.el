@@ -20,6 +20,8 @@
 
 (add-hook 'emacs-startup-hook #'efs/display-startup-time)
 
+(add-to-list 'load-path "~/projects/emacs/packages")
+
 ;; Initialize package sources
 (require 'package)
 
@@ -489,16 +491,24 @@
 
 (use-package eglot)
 (require 'eglot)
+(require 'emacs-clang-rename)
+(require 'clang-refactor)
+(use-package srefactor)
+(require 'srefactor)
 (which-key-mode)
 (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
 (dolist (mode '(c-mode-hook
               c++-mode-hook))
+(require 'projectile)
+(semantic-mode 1)
 (add-hook mode 'eglot-ensure)
 (add-hook mode (lambda () (lsp-mode t)))
 (add-hook mode (lambda () (lsp-ui-mode t)))
-(setq projectile-project-compile-cmd "cmake --build . -j")
-(setq projectile-project-test-cmd "ctest -VV")
-(setq projectile-project-configure-cmd "rm -rf build && cmake ./ -B ./build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))
+(add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
+;(setq emacs-clang-rename-compile-commands-file  "/home/hdevarajan/projects/hermes/build/compile_commands.json")
+(add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
+(add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -VV")))
+(add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -B " (projectile-project-root) "build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1")))))
 
 (use-package company
   :after lsp-mode

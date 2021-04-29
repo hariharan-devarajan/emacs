@@ -50,6 +50,7 @@ In this document I've added links in many places that lead you to documentation 
 Emacs has a built in package manager but it doesn't make it easy to automatically install packages on a new system the first time you pull down your configuration.  [[https://github.com/jwiegley/use-package][use-package]] is a really helpful package used in this configuration to make it a lot easier to automate the installation and configuration of everything else we use.
 
 #+begin_src emacs-lisp
+  (add-to-list 'load-path "~/projects/emacs/packages")
 
   ;; Initialize package sources
   (require 'package)
@@ -803,18 +804,26 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
 #+end_src
 *** C/C++ CMake
 #+begin_src emacs-lisp
-        (use-package eglot)
-        (require 'eglot)
-        (which-key-mode)
-        (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
-        (dolist (mode '(c-mode-hook
-                      c++-mode-hook))
-        (add-hook mode 'eglot-ensure)
-        (add-hook mode (lambda () (lsp-mode t)))
-        (add-hook mode (lambda () (lsp-ui-mode t)))
-        (setq projectile-project-compile-cmd "cmake --build . -j")
-        (setq projectile-project-test-cmd "ctest -VV")
-        (setq projectile-project-configure-cmd "rm -rf build && cmake ./ -B ./build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))
+  (use-package eglot)
+  (require 'eglot)
+  (require 'emacs-clang-rename)
+  (require 'clang-refactor)
+  (use-package srefactor)
+  (require 'srefactor)
+  (which-key-mode)
+  (add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd"))
+  (dolist (mode '(c-mode-hook
+                c++-mode-hook))
+  (require 'projectile)
+  (semantic-mode 1)
+  (add-hook mode 'eglot-ensure)
+  (add-hook mode (lambda () (lsp-mode t)))
+  (add-hook mode (lambda () (lsp-ui-mode t)))
+  (add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
+  ;(setq emacs-clang-rename-compile-commands-file  "/home/hdevarajan/projects/hermes/build/compile_commands.json")
+  (add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
+  (add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -VV")))
+  (add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -B " (projectile-project-root) "build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1")))))
 #+end_src
 
 ** Company Mode
