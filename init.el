@@ -135,9 +135,9 @@
     "f"  '(:ignore t :which-key "source file")
     "fs" '(lsp-treemacs-symbols :which-key "show symbols in the file")
     "fr" '(lsp-treemacs-references :which-key "show reference in the file")
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")
-    "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
+    "ff" '(clang-format-buffer :which-key "reformats the file using clang-format")
+    "fd" '(lsp-treemacs-errors-list :which-key "show diagnostic information in file")
+    "t"  '(:ignore t :which-key "toggles")))
 
 (use-package evil
   :init
@@ -510,7 +510,7 @@
   (pyvenv-mode 1))
 
 (setq package-selected-packages '(lsp-mode yasnippet lsp-treemacs helm-lsp
-      projectile hydra flycheck company avy helm-xref dap-mode))
+      projectile hydra clang-format+ flycheck company avy helm-xref dap-mode))
 
   (when (cl-find-if-not #'package-installed-p package-selected-packages)
     (package-refresh-contents)
@@ -519,6 +519,9 @@
   ;; sample `helm' configuration use https://github.com/emacs-helm/helm/ for details
   (helm-mode)
   (require 'helm-xref)
+  (require 'clang-format+)
+  (add-hook 'c-mode-common-hook #'clang-format+-mode)
+  (setq clang-format+-always-enable t)
   (which-key-mode)
   (dolist (mode '(c-mode-hook
                   c++-mode-hook))
