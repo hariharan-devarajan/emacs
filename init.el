@@ -137,7 +137,8 @@
     "fr" '(lsp-treemacs-references :which-key "show reference in the file")
     "ff" '(clang-format-buffer :which-key "reformats the file using clang-format")
     "fd" '(lsp-treemacs-errors-list :which-key "show diagnostic information in file")
-    "t"  '(:ignore t :which-key "toggles")))
+    "t"  '(:ignore t :which-key "toggles")
+    "ti" '(ivy-rich-mode :which-key "toggle ivy-rich-mode")))
 
 (use-package evil
   :init
@@ -203,7 +204,7 @@
 (use-package ivy-rich
   :after ivy
   :init
-  (ivy-rich-mode 1))
+  (ivy-rich-mode t))
 
 (use-package counsel
   :bind (("C-M-j" . 'counsel-switch-buffer)
