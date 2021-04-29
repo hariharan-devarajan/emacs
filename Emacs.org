@@ -820,7 +820,6 @@ You can use the pyvenv package to use =virtualenv= environments in Emacs.  The =
   (add-hook mode (lambda () (lsp-mode t)))
   (add-hook mode (lambda () (lsp-ui-mode t)))
   (add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
-  ;(setq emacs-clang-rename-compile-commands-file  "/home/hdevarajan/projects/hermes/build/compile_commands.json")
   (add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
   (add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -VV")))
   (add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -B " (projectile-project-root) "build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1")))))
