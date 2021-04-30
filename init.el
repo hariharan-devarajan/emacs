@@ -477,101 +477,114 @@
 (use-package lsp-ivy
   :after lsp)
 
-(require 'gud)
+;;   (require 'gud)
+  ;;   (use-package realgud)
+  ;;   (require 'realgud)
 
-  ; GDB layout
-  (defadvice gdb-setup-windows (after activate)
-    (gdb-setup-my-windows))
-  (add-to-list 'display-buffer-alist
-    (cons 'cdb-source-code-buffer-p
-      (cons 'display-source-code-buffer nil)))
+  ;;   ; GDB layout
+  ;;   (defadvice gdb-setup-windows (after activate)
+  ;;     (gdb-setup-my-windows))
+  ;;   (add-to-list 'display-buffer-alist
+  ;;     (cons 'cdb-source-code-buffer-p
+  ;;       (cons 'display-source-code-buffer nil)))
 
-  (defun cdb-source-code-buffer-p (bufName action)
-  "Return whether BUFNAME is a source code buffer."
-  (let ((buf (get-buffer bufName)))
-    (and buf
-     (with-current-buffer buf
-       (derived-mode-p buf 'c++-mode 'c-mode 'csharp-mode 'nxml-mode)))))
-(defvar all-gud-modes
-  '(gud-mode comint-mode gdb-locals-mode gdb-frames-mode  gdb-breakpoints-mode)
-  "A list of modes when using gdb")
-(defun kill-all-gud-buffers ()
-  "Kill all gud buffers including Debugger, Locals, Frames, Breakpoints.
-Do this after `q` in Debugger buffer."
-  (interactive)
-  (save-excursion
-        (let ((count 0))
-          (dolist (buffer (buffer-list))
-                (set-buffer buffer)
-                (when (member major-mode all-gud-modes)
-                  (setq count (1+ count))
-                  (kill-buffer buffer)
-                  (delete-other-windows))) ;; fix the remaining two windows issue
-          (message "Killed %i buffer(s)." count))))
-(defun display-source-code-buffer (sourceBuf alist)
-  "Find a window with source code and set sourceBuf inside it."
-  (let* ((curbuf (current-buffer))
-     (wincurbuf (get-buffer-window curbuf))
-     (win (if (and wincurbuf
-               (derived-mode-p sourceBuf 'c++-mode 'c-mode 'nxml-mode)
-               (derived-mode-p (current-buffer) 'c++-mode 'c-mode 'nxml-mode))
-          wincurbuf
-        (get-window-with-predicate
-         (lambda (window)
-           (let ((bufName (buffer-name (window-buffer window))))
-             (or (cdb-source-code-buffer-p bufName nil)
-             (assoc bufName display-buffer-alist)
-             ))))))) ;; derived-mode-p doesn't work inside this, don't know why...
-    (set-window-buffer win sourceBuf)
-    win))
-  (defun gdb-setup-my-windows ()
-        (set-window-dedicated-p (selected-window) nil)
-        (switch-to-buffer gud-comint-buffer)
-        (delete-other-windows)
-        (let
-          ((win0 (selected-window))             ; breakpoints
-           (win1 (split-window-horizontally
-               (floor (* 0.5 (window-width)))))   ; source + i/o
-           (win2 (split-window-vertically
-               (floor (* 0.5 (window-body-height))))) ; gdb
-           (win3 (split-window-vertically
-              (floor (* 0.5 (window-body-height))))) ; locals
-           (win4 (split-window-vertically
-               (floor (* 0.6 (window-body-height))))) ; stack
-          )
-          (select-window win1)
-          ; configurating right window
-          (let
-          ((winSrc (selected-window)) ; source
-           (winIO (split-window-vertically (floor (* 0.9 (window-body-height))))) ; I/O
-           )
-            (set-window-buffer winIO (gdb-get-buffer-create 'gdb-inferior-io))
-            (set-window-buffer
-          winSrc
-          (if gud-last-last-frame
-           (gud-find-file (car gud-last-last-frame))
-            (if gdb-main-file
-             (gud-find-file gdb-main-file)
-           (list-buffers-noselect))))
-            (setq gdb-source-window winSrc)
-            (set-window-dedicated-p winIO t)
-         )
+  ;;   (defun cdb-source-code-buffer-p (bufName action)
+  ;;   "Return whether BUFNAME is a source code buffer."
+  ;;   (let ((buf (get-buffer bufName)))
+  ;;     (and buf
+  ;;      (with-current-buffer buf
+  ;;        (derived-mode-p buf 'c++-mode 'c-mode 'csharp-mode 'nxml-mode)))))
+  ;; (defvar all-gud-modes
+  ;;   '(gud-mode comint-mode gdb-locals-mode gdb-frames-mode  gdb-breakpoints-mode)
+  ;;   "A list of modes when using gdb")
+  ;; (defun kill-all-gud-buffers ()
+  ;;   "Kill all gud buffers including Debugger, Locals, Frames, Breakpoints.
+  ;; Do this after `q` in Debugger buffer."
+  ;;   (interactive)
+  ;;   (save-excursion
+  ;;         (let ((count 0))
+  ;;           (dolist (buffer (buffer-list))
+  ;;                 (set-buffer buffer)
+  ;;                 (when (member major-mode all-gud-modes)
+  ;;                   (setq count (1+ count))
+  ;;                   (kill-buffer buffer)
+  ;;                   (delete-other-windows))) ;; fix the remaining two windows issue
+  ;;           (message "Killed %i buffer(s)." count))))
+  ;; (defun display-source-code-buffer (sourceBuf alist)
+  ;;   "Find a window with source code and set sourceBuf inside it."
+  ;;   (let* ((curbuf (current-buffer))
+  ;;      (wincurbuf (get-buffer-window curbuf))
+  ;;      (win (if (and wincurbuf
+  ;;                (derived-mode-p sourceBuf 'c++-mode 'c-mode 'nxml-mode)
+  ;;                (derived-mode-p (current-buffer) 'c++-mode 'c-mode 'nxml-mode))
+  ;;           wincurbuf
+  ;;         (get-window-with-predicate
+  ;;          (lambda (window)
+  ;;            (let ((bufName (buffer-name (window-buffer window))))
+  ;;              (or (cdb-source-code-buffer-p bufName nil)
+  ;;              (assoc bufName display-buffer-alist)
+  ;;              ))))))) ;; derived-mode-p doesn't work inside this, don't know why...
+  ;;     (set-window-buffer win sourceBuf)
+  ;;     win))
+  ;;   (defun gdb-setup-my-windows ()
+  ;;         (set-window-dedicated-p (selected-window) nil)
+  ;;         (switch-to-buffer gud-comint-buffer)
+  ;;         (delete-other-windows)
+  ;;         (let
+  ;;           ((win0 (selected-window))             ; breakpoints
+  ;;            (win1 (split-window-horizontally
+  ;;                (floor (* 0.5 (window-width)))))   ; source + i/o
+  ;;            (win2 (split-window-vertically
+  ;;                (floor (* 0.5 (window-body-height))))) ; gdb
+  ;;            (win3 (split-window-vertically
+  ;;               (floor (* 0.5 (window-body-height))))) ; locals
+  ;;            (win4 (split-window-vertically
+  ;;                (floor (* 0.6 (window-body-height))))) ; stack
+  ;;           )
+  ;;           (select-window win1)
+  ;;           ; configurating right window
+  ;;           (let
+  ;;           ((winSrc (selected-window)) ; source
+  ;;            (winIO (split-window-vertically (floor (* 0.9 (window-body-height))))) ; I/O
+  ;;            )
+  ;;             (set-window-buffer winIO (gdb-get-buffer-create 'gdb-inferior-io))
+  ;;             (set-window-buffer
+  ;;           winSrc
+  ;;           (if gud-last-last-frame
+  ;;            (gud-find-file (car gud-last-last-frame))
+  ;;             (if gdb-main-file
+  ;;              (gud-find-file gdb-main-file)
+  ;;            (list-buffers-noselect))))
+  ;;             (setq gdb-source-window winSrc)
+  ;;             (set-window-dedicated-p winIO t)
+  ;;          )
 
-          (set-window-buffer win0 (gdb-get-buffer-create 'gdb-breakpoints-buffer))
-          (set-window-buffer win3 (gdb-get-buffer-create 'gdb-locals-buffer))
-          (set-window-buffer win4 (gdb-get-buffer-create 'gdb-stack-buffer))
-          (select-window win2)
-        )
-      )
+  ;;           (set-window-buffer win0 (gdb-get-buffer-create 'gdb-breakpoints-buffer))
+  ;;           (set-window-buffer win3 (gdb-get-buffer-create 'gdb-locals-buffer))
+  ;;           (set-window-buffer win4 (gdb-get-buffer-create 'gdb-stack-buffer))
+  ;;           (select-window win2)
+  ;;         )
+  ;;       )
 
-      ; GDB variables
-      (setq gdb-many-windows t)
-      (setq gdb-show-main t)
-      (setq gdb-show-changed-values t)
-      (setq gdb-use-colon-colon-notation t)
-      (setq gdb-use-separate-io-buffer nil)
-      (setq gdb-delete-out-of-scope t)
-      (setq gdb-speedbar-auto-raise t)
+  ;;       ; GDB variables
+  ;;       (setq gdb-many-windows t)
+  ;;       (setq gdb-show-main t)
+  ;;       (setq gdb-show-changed-values t)
+  ;;       (setq gdb-use-colon-colon-notation t)
+  ;;       (setq gdb-use-separate-io-buffer nil)
+  ;;       (setq gdb-delete-out-of-scope t)
+  ;;       (setq gdb-speedbar-auto-raise t)
+(use-package quelpa)
+(require 'quelpa)
+(use-package quelpa-use-package)
+(require 'quelpa-use-package)
+(use-package gdb-mi
+  :quelpa (gdb-mi :fetcher git
+             :url "https://github.com/hariharan-devarajan/emacs-gdb.git"
+                                    :files ("*.el" "*.c" "*.h" "Makefile"))
+  :init
+  (fmakunbound 'gdb)
+  (fmakunbound 'gdb-enable-debug))
 
 (use-package dap-mode
   ;; Uncomment the config below if you want all UI panes to be hidden by default!
