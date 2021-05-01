@@ -742,114 +742,293 @@ Try these commands with =M-x=:
 
 *** Debugging with gdb-gud
 #+begin_src emacs-lisp
-    ;;   (require 'gud)
-    ;;   (use-package realgud)
-    ;;   (require 'realgud)
+              ; (require 'gdb)
 
-    ;;   ; GDB layout
-    ;;   (defadvice gdb-setup-windows (after activate)
-    ;;     (gdb-setup-my-windows))
-    ;;   (add-to-list 'display-buffer-alist
-    ;;     (cons 'cdb-source-code-buffer-p
-    ;;       (cons 'display-source-code-buffer nil)))
+              ; GDB layout
+            ;;   (defadvice gdb-setup-windows (after activate)
+            ;;     (gdb-setup-my-windows))
+            ;;   (add-to-list 'display-buffer-alist
+            ;;     (cons 'cdb-source-code-buffer-p
+            ;;       (cons 'display-source-code-buffer nil)))
 
-    ;;   (defun cdb-source-code-buffer-p (bufName action)
-    ;;   "Return whether BUFNAME is a source code buffer."
-    ;;   (let ((buf (get-buffer bufName)))
-    ;;     (and buf
-    ;;      (with-current-buffer buf
-    ;;        (derived-mode-p buf 'c++-mode 'c-mode 'csharp-mode 'nxml-mode)))))
-    ;; (defvar all-gud-modes
-    ;;   '(gud-mode comint-mode gdb-locals-mode gdb-frames-mode  gdb-breakpoints-mode)
-    ;;   "A list of modes when using gdb")
-    ;; (defun kill-all-gud-buffers ()
-    ;;   "Kill all gud buffers including Debugger, Locals, Frames, Breakpoints.
-    ;; Do this after `q` in Debugger buffer."
-    ;;   (interactive)
-    ;;   (save-excursion
-    ;;         (let ((count 0))
-    ;;           (dolist (buffer (buffer-list))
-    ;;                 (set-buffer buffer)
-    ;;                 (when (member major-mode all-gud-modes)
-    ;;                   (setq count (1+ count))
-    ;;                   (kill-buffer buffer)
-    ;;                   (delete-other-windows))) ;; fix the remaining two windows issue
-    ;;           (message "Killed %i buffer(s)." count))))
-    ;; (defun display-source-code-buffer (sourceBuf alist)
-    ;;   "Find a window with source code and set sourceBuf inside it."
-    ;;   (let* ((curbuf (current-buffer))
-    ;;      (wincurbuf (get-buffer-window curbuf))
-    ;;      (win (if (and wincurbuf
-    ;;                (derived-mode-p sourceBuf 'c++-mode 'c-mode 'nxml-mode)
-    ;;                (derived-mode-p (current-buffer) 'c++-mode 'c-mode 'nxml-mode))
-    ;;           wincurbuf
-    ;;         (get-window-with-predicate
-    ;;          (lambda (window)
-    ;;            (let ((bufName (buffer-name (window-buffer window))))
-    ;;              (or (cdb-source-code-buffer-p bufName nil)
-    ;;              (assoc bufName display-buffer-alist)
-    ;;              ))))))) ;; derived-mode-p doesn't work inside this, don't know why...
-    ;;     (set-window-buffer win sourceBuf)
-    ;;     win))
-    ;;   (defun gdb-setup-my-windows ()
-    ;;         (set-window-dedicated-p (selected-window) nil)
-    ;;         (switch-to-buffer gud-comint-buffer)
-    ;;         (delete-other-windows)
-    ;;         (let
-    ;;           ((win0 (selected-window))             ; breakpoints
-    ;;            (win1 (split-window-horizontally
-    ;;                (floor (* 0.5 (window-width)))))   ; source + i/o
-    ;;            (win2 (split-window-vertically
-    ;;                (floor (* 0.5 (window-body-height))))) ; gdb
-    ;;            (win3 (split-window-vertically
-    ;;               (floor (* 0.5 (window-body-height))))) ; locals
-    ;;            (win4 (split-window-vertically
-    ;;                (floor (* 0.6 (window-body-height))))) ; stack
-    ;;           )
-    ;;           (select-window win1)
-    ;;           ; configurating right window
-    ;;           (let
-    ;;           ((winSrc (selected-window)) ; source
-    ;;            (winIO (split-window-vertically (floor (* 0.9 (window-body-height))))) ; I/O
-    ;;            )
-    ;;             (set-window-buffer winIO (gdb-get-buffer-create 'gdb-inferior-io))
-    ;;             (set-window-buffer
-    ;;           winSrc
-    ;;           (if gud-last-last-frame
-    ;;            (gud-find-file (car gud-last-last-frame))
-    ;;             (if gdb-main-file
-    ;;              (gud-find-file gdb-main-file)
-    ;;            (list-buffers-noselect))))
-    ;;             (setq gdb-source-window winSrc)
-    ;;             (set-window-dedicated-p winIO t)
-    ;;          )
+            ;;   (defun cdb-source-code-buffer-p (bufName action)
+            ;;   "Return whether BUFNAME is a source code buffer."
+            ;;   (let ((buf (get-buffer bufName)))
+            ;;     (and buf
+            ;;      (with-current-buffer buf
+            ;;        (derived-mode-p buf 'c++-mode 'c-mode 'csharp-mode 'nxml-mode)))))
+            ;; (defvar all-gud-modes
+            ;;   '(gud-mode comint-mode gdb-locals-mode gdb-frames-mode  gdb-breakpoints-mode)
+            ;;   "A list of modes when using gdb")
+            ;; (defun kill-all-gud-buffers ()
+            ;;   "Kill all gud buffers including Debugger, Locals, Frames, Breakpoints.
+            ;; Do this after `q` in Debugger buffer."
+            ;;   (interactive)
+            ;;   (save-excursion
+            ;;         (let ((count 0))
+            ;;           (dolist (buffer (buffer-list))
+            ;;                 (set-buffer buffer)
+            ;;                 (when (member major-mode all-gud-modes)
+            ;;                   (setq count (1+ count))
+            ;;                   (kill-buffer buffer)
+            ;;                   (delete-other-windows))) ;; fix the remaining two windows issue
+            ;;           (message "Killed %i buffer(s)." count))))
+            ;; (defun display-source-code-buffer (sourceBuf alist)
+            ;;   "Find a window with source code and set sourceBuf inside it."
+            ;;   (let* ((curbuf (current-buffer))
+            ;;      (wincurbuf (get-buffer-window curbuf))
+            ;;      (win (if (and wincurbuf
+            ;;                (derived-mode-p sourceBuf 'c++-mode 'c-mode 'nxml-mode)
+            ;;                (derived-mode-p (current-buffer) 'c++-mode 'c-mode 'nxml-mode))
+            ;;           wincurbuf
+            ;;         (get-window-with-predicate
+            ;;          (lambda (window)
+            ;;            (let ((bufName (buffer-name (window-buffer window))))
+            ;;              (or (cdb-source-code-buffer-p bufName nil)
+            ;;              (assoc bufName display-buffer-alist)
+            ;;              ))))))) ;; derived-mode-p doesn't work inside this, don't know why...
+            ;;     (set-window-buffer win sourceBuf)
+            ;;     win))
+            ;;   (defun gdb-setup-my-windows ()
+            ;;         (set-window-dedicated-p (selected-window) nil)
+            ;;         (switch-to-buffer gud-comint-buffer)
+            ;;         (delete-other-windows)
+            ;;         (let
+            ;;           ((win0 (selected-window))             ; breakpoints
+            ;;            (win1 (split-window-horizontally
+            ;;                (floor (* 0.5 (window-width)))))   ; source + i/o
+            ;;            (win2 (split-window-vertically
+            ;;                (floor (* 0.5 (window-body-height))))) ; gdb
+            ;;            (win3 (split-window-vertically
+            ;;               (floor (* 0.5 (window-body-height))))) ; locals
+            ;;            (win4 (split-window-vertically
+            ;;                (floor (* 0.6 (window-body-height))))) ; stack
+            ;;           )
+            ;;           (select-window win1)
+            ;;           ; configurating right window
+            ;;           (let
+            ;;           ((winSrc (selected-window)) ; source
+            ;;            (winIO (split-window-vertically (floor (* 0.9 (window-body-height))))) ; I/O
+            ;;            )
+            ;;             (set-window-buffer winIO (gdb-get-buffer-create 'gdb-inferior-io))
+            ;;             (set-window-buffer
+            ;;           winSrc
+            ;;           (if gud-last-last-frame
+            ;;            (gud-find-file (car gud-last-last-frame))
+            ;;             (if gdb-main-file
+            ;;              (gud-find-file gdb-main-file)
+            ;;            (list-buffers-noselect))))
+            ;;             (setq gdb-source-window winSrc)
+            ;;             (set-window-dedicated-p winIO t)
+            ;;          )
 
-    ;;           (set-window-buffer win0 (gdb-get-buffer-create 'gdb-breakpoints-buffer))
-    ;;           (set-window-buffer win3 (gdb-get-buffer-create 'gdb-locals-buffer))
-    ;;           (set-window-buffer win4 (gdb-get-buffer-create 'gdb-stack-buffer))
-    ;;           (select-window win2)
-    ;;         )
-    ;;       )
+            ;;           (set-window-buffer win0 (gdb-get-buffer-create 'gdb-breakpoints-buffer))
+            ;;           (set-window-buffer win3 (gdb-get-buffer-create 'gdb-locals-buffer))
+            ;;           (set-window-buffer win4 (gdb-get-buffer-create 'gdb-stack-buffer))
+            ;;           (select-window win2)
+            ;;         )
+            ;;       )
 
-    ;;       ; GDB variables
-    ;;       (setq gdb-many-windows t)
-    ;;       (setq gdb-show-main t)
-    ;;       (setq gdb-show-changed-values t)
-    ;;       (setq gdb-use-colon-colon-notation t)
-    ;;       (setq gdb-use-separate-io-buffer nil)
-    ;;       (setq gdb-delete-out-of-scope t)
-    ;;       (setq gdb-speedbar-auto-raise t)
-  (use-package quelpa)
-  (require 'quelpa)
-  (use-package quelpa-use-package)
-  (require 'quelpa-use-package)
-  (use-package gdb-mi
-    :quelpa (gdb-mi :fetcher git
-               :url "https://github.com/hariharan-devarajan/emacs-gdb.git"
-                                      :files ("*.el" "*.c" "*.h" "Makefile"))
-    :init
-    (fmakunbound 'gdb)
-    (fmakunbound 'gdb-enable-debug))
+            ;;       ; GDB variables
+            ;;       (setq gdb-many-windows t)
+            ;;       (setq gdb-show-main t)
+            ;;       (setq gdb-show-changed-values t)
+            ;;       (setq gdb-use-colon-colon-notation t)
+            ;;       (setq gdb-use-separate-io-buffer nil)
+            ;;       (setq gdb-delete-out-of-scope t)
+            ;;       (setq gdb-speedbar-auto-raise t)
+          (use-package quelpa)
+          (require 'quelpa)
+          (use-package quelpa-use-package)
+          (require 'quelpa-use-package)
+          (use-package gdb-mi
+            :quelpa (gdb-mi :fetcher git
+                       :url "https://github.com/hariharan-devarajan/emacs-gdb.git"
+                                              :files ("*.el" "*.c" "*.h" "Makefile"))
+            :init
+            (fmakunbound 'gdb)
+            (fmakunbound 'gdb-enable-debug))
+          (defun gdb-pid-internal (debuggee-pid)
+          "Start debugging an executable at DEBUGGEE-PATH in the current session.
+           If no session is available, one is automatically created."
+          (let ((session (gdb-create-session)))
+            (setf (gdb--session-debuggee-path session) debuggee-pid)
+
+            (with-selected-frame (gdb--session-frame session)
+              (gdb--command (concat "attach " debuggee-pid))
+              (gdb--command "-file-list-exec-source-file" 'gdb--context-initial-file)
+              (gdb--rename-buffers-with-debuggee debuggee-pid))
+
+            (cl-loop for frame in (frame-list)
+                     when (eq (frame-parameter frame 'gdb--session) session)
+                     do (gdb--rename-frame frame))))
+
+      (defun gdb-toggle-breakpoint-all (&optional arg)
+        "Toggle breakpoint in the current location.
+      When ARG is non-nil, prompt for additional breakpoint settings.
+      If ARG is `dprintf' create a dprintf breakpoint instead."
+        (interactive "P")
+        (setq gdb--session-temp gdb--session)
+        (cl-loop for session in gdb--sessions do
+         (setq gdb--session session) 
+         (let ((breakpoint-on-point (gdb--infer-breakpoint session))
+               (location (gdb--point-location))
+               (dprintf (eq arg 'dprintf))
+               type thread ignore-count condition format-args)
+           (when (and (not location) breakpoint-on-point)
+             (setq location (gdb--infer-breakpoint-location breakpoint-on-point)))
+
+           (when (or arg (not location))
+             (unless (string= (or location "")
+                              (setq location (read-string (concat "Location: ") location)))
+               (setq breakpoint-on-point nil))
+
+             (when breakpoint-on-point
+               (setq thread       (gdb--breakpoint-thread       breakpoint-on-point)
+                     ignore-count (gdb--breakpoint-ignore-count breakpoint-on-point)
+                     condition    (gdb--breakpoint-condition    breakpoint-on-point)))
+
+             (setq
+              type (cdr (assoc-string (completing-read (concat "Type of " (if dprintf "dprintf" "breakpoint") ":")
+                                                       gdb--available-breakpoint-types nil t nil nil
+                                                       (caar gdb--available-breakpoint-types))
+                                      gdb--available-breakpoint-types))
+              thread (gdb--ask-for-thread thread)
+              ignore-count (read-number "Ignore count: " (or ignore-count 0))
+              condition (gdb--read-line "Condition: " condition))
+
+             (when dprintf (setq format-args (gdb--read-line "Format and args: "))))
+
+           (when breakpoint-on-point
+             (gdb--command (format "-break-delete %d" (gdb--breakpoint-number breakpoint-on-point))
+                           (cons 'gdb--context-breakpoint-delete breakpoint-on-point)))
+
+           (when (and location (or arg (not breakpoint-on-point)))
+             (gdb--command (concat "-" (if dprintf "dprintf" "break") "-insert "
+                                   (and (> (length condition) 0) (concat "-c " (gdb--escape-argument condition) " "))
+                                   (and thread (format "-p %d " (gdb--thread-id thread)))
+                                   (and ignore-count (> ignore-count 0) (format "-i %d " ignore-count))
+                                   type "-f " (gdb--escape-argument location)
+                                   (when dprintf (concat " " format-args)))
+                           'gdb--context-breakpoint-insert nil t))))
+        (setq gdb--session gdb--session-temp))
+          (defun gdb-pid (debuggee-pid)
+          "Start debugging an executable at DEBUGGEE-PATH in the current session.
+        If no session is available, one is automatically created."
+          (interactive "spid: ")
+	    (gdb-pid-internal debuggee-pid))   
+      (defun gdb-toggle-breakpoint-all (&optional arg)
+        "Toggle breakpoint in the current location.
+      When ARG is non-nil, prompt for additional breakpoint settings.
+      If ARG is `dprintf' create a dprintf breakpoint instead."
+        (interactive "P")
+        (setq gdb--session-temp gdb--session)
+        (cl-loop for session in gdb--sessions do
+         (setq gdb--session session) 
+         (let ((breakpoint-on-point (gdb--infer-breakpoint session))
+               (location (gdb--point-location))
+               (dprintf (eq arg 'dprintf))
+               type thread ignore-count condition format-args)
+           (when (and (not location) breakpoint-on-point)
+             (setq location (gdb--infer-breakpoint-location breakpoint-on-point)))
+
+           (when (or arg (not location))
+             (unless (string= (or location "")
+                              (setq location (read-string (concat "Location: ") location)))
+               (setq breakpoint-on-point nil))
+
+             (when breakpoint-on-point
+               (setq thread       (gdb--breakpoint-thread       breakpoint-on-point)
+                     ignore-count (gdb--breakpoint-ignore-count breakpoint-on-point)
+                     condition    (gdb--breakpoint-condition    breakpoint-on-point)))
+
+             (setq
+              type (cdr (assoc-string (completing-read (concat "Type of " (if dprintf "dprintf" "breakpoint") ":")
+                                                       gdb--available-breakpoint-types nil t nil nil
+                                                       (caar gdb--available-breakpoint-types))
+                                      gdb--available-breakpoint-types))
+              thread (gdb--ask-for-thread thread)
+              ignore-count (read-number "Ignore count: " (or ignore-count 0))
+              condition (gdb--read-line "Condition: " condition))
+
+             (when dprintf (setq format-args (gdb--read-line "Format and args: "))))
+
+           (when breakpoint-on-point
+             (gdb--command (format "-break-delete %d" (gdb--breakpoint-number breakpoint-on-point))
+                           (cons 'gdb--context-breakpoint-delete breakpoint-on-point)))
+
+           (when (and location (or arg (not breakpoint-on-point)))
+             (gdb--command (concat "-" (if dprintf "dprintf" "break") "-insert "
+                                   (and (> (length condition) 0) (concat "-c " (gdb--escape-argument condition) " "))
+                                   (and thread (format "-p %d " (gdb--thread-id thread)))
+                                   (and ignore-count (> ignore-count 0) (format "-i %d " ignore-count))
+                                   type "-f " (gdb--escape-argument location)
+                                   (when dprintf (concat " " format-args)))
+                           'gdb--context-breakpoint-insert nil t))))
+        (setq gdb--session gdb--session-temp))
+    (defun gdb-continue-all (&optional arg)
+      "If ARG is nil, try to resume threads in this order:
+      - Inferred thread if it is stopped
+      - Selected thread if it is stopped
+      - All threads
+
+    If ARG is non-nil, resume all threads unconditionally."
+      (interactive "P")
+      (setq gdb--session-temp gdb--session)
+      (cl-loop for session in gdb--sessions do
+       (setq gdb--session session)
+       (gdb--with-valid-session
+       (let* ((inferred-thread (gdb--infer-thread 'not-selected))
+              (selected-thread (gdb--session-selected-thread session))
+              (thread-to-resume
+               (unless arg
+                 (cond
+                  ((and inferred-thread (string= (gdb--thread-state inferred-thread) "stopped")) inferred-thread)
+                  ((and selected-thread (string= (gdb--thread-state selected-thread) "stopped")) selected-thread)))))
+
+         (if (or arg (not thread-to-resume))
+             (gdb--command "-exec-continue --all")
+           (gdb--command "-exec-continue" nil thread-to-resume)))))
+       (setq gdb--session gdb--session-temp))
+  (defun gdb-kill-all-session ()
+    "Kill current GDB session."
+    (interactive)
+    (setq gdb--session-temp gdb--session)
+    (cl-loop for session in gdb--sessions do
+     (setq gdb--session session)
+    (gdb--kill-session (gdb--infer-session)))
+    (setq gdb--session gdb--session-temp))
+   (defun executable-find (command)
+    "Search for COMMAND in `exec-path' and return the absolute file name.
+     Return nil if COMMAND is not found anywhere in `exec-path'."
+     ;; Use 1 rather than file-executable-p to better match the behavior of
+     ;; call-process.
+    (locate-file command exec-path exec-suffixes 1))
+   (setq mpi-executable (executable-find "mpirun"))
+   (defun string-trim-final-newline (string)
+  (let ((len (length string)))
+    (cond
+      ((and (> len 0) (eql (aref string (- len 1)) ?\n))
+       (substring string 0 (- len 1)))
+      (t string))))
+   (defun mpi-debug (path procs)
+     "mpirun -n procs path"
+     (interactive
+       (list
+         (read-file-name "Enter Executable: ")
+         (read-string "Num of procs: ")
+     ))
+     (setq mpi-command (format "%s -n %s %s" mpi-executable procs path))
+     (with-output-to-temp-buffer mpi-command
+     (async-shell-command mpi-command mpi-command "*Messages*")
+     (pop-to-buffer mpi-command)
+     (setq proc_ids (shell-command-to-string (format "ps -aef | grep %s | grep -v grep | grep -v mpirun | awk '{print $2}'" path)))
+     (setq proc_ids (string-trim-final-newline proc_ids))
+     (setq proc_id_lists (split-string proc_ids "\n"))
+     (cl-loop for proc_id in proc_id_lists do
+              (gdb-pid-internal proc_id))
+     ))
+
 #+end_src
 
 *** Debugging with dap-mode
