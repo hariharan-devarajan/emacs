@@ -40,13 +40,6 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-;; (use-package treemacs)
-;; (use-package treemacs-projectile)
-;; (use-package lsp-treemacs
-;;   :after lsp
-;;   :config
-;;   (treemacs))
-
 (use-package auto-package-update
   :custom
   (auto-package-update-interval 7)
@@ -464,6 +457,14 @@
   :init
   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
   :config
+  (progn
+  (add-hook 'prog-mode-hook #'lsp)
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection
+				     "/mnt/common/hdevarajan/stage/spack/var/spack/environments/emacs/.spack-env/view/bin/clang")
+                    :major-modes '(c-mode c++-mode)
+                    :remote? t
+                    :server-id 'clangd-remote)))
   (lsp-enable-which-key-integration t))
 
 (use-package lsp-ui
@@ -483,158 +484,6 @@
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
   (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode))
 
-;; GDB base package 
-  (use-package quelpa)
-  (require 'quelpa)
-  (use-package quelpa-use-package)
-  (require 'quelpa-use-package)
-  (use-package gdb-mi
-    :quelpa (gdb-mi :fetcher git
-                    :url "https://github.com/hariharan-devarajan/emacs-gdb.git"
-                    :files ("*.el" "*.c" "*.h" "Makefile"))
-    :init
-    (fmakunbound 'gdb)
-    (fmakunbound 'gdb-enable-debug))
-  ;; GDB functions to enhance functionality 
-  (defun gdb-pid-internal (debuggee-pid)
-    "Start debugging an executable with DEBUGGEE-PID in a new current session."
-    (let ((session (gdb-create-session)))
-      (setf (gdb--session-debuggee-path session) debuggee-pid)
-
-      (with-selected-frame (gdb--session-frame session)
-        (gdb--command (concat "attach " debuggee-pid))
-        (gdb--command "-file-list-exec-source-file" 'gdb--context-initial-file)
-        (gdb--rename-buffers-with-debuggee debuggee-pid))
-
-      (cl-loop for frame in (frame-list)
-               when (eq (frame-parameter frame 'gdb--session) session)
-               do (gdb--rename-frame frame))))
-
-  (defun gdb-toggle-breakpoint-all (&optional arg)
-    "Toggle breakpoint in all active gdb sessions location.
-            When ARG is non-nil, prompt for additional breakpoint settings.
-            If ARG is `dprintf' create a dprintf breakpoint instead."
-    (interactive "P")
-    (setq gdb--session-temp gdb--session)
-    (cl-loop for session in gdb--sessions do
-             (setq gdb--session session) 
-             (let ((breakpoint-on-point (gdb--infer-breakpoint session))
-                   (location (gdb--point-location))
-                   (dprintf (eq arg 'dprintf))
-                   type thread ignore-count condition format-args)
-               (when (and (not location) breakpoint-on-point)
-                 (setq location (gdb--infer-breakpoint-location breakpoint-on-point)))
-
-               (when (or arg (not location))
-                 (unless (string= (or location "")
-                                  (setq location (read-string (concat "Location: ") location)))
-                   (setq breakpoint-on-point nil))
-
-                 (when breakpoint-on-point
-                   (setq thread       (gdb--breakpoint-thread       breakpoint-on-point)
-                         ignore-count (gdb--breakpoint-ignore-count breakpoint-on-point)
-                         condition    (gdb--breakpoint-condition    breakpoint-on-point)))
-
-                 (setq
-                  type (cdr (assoc-string (completing-read (concat "Type of " (if dprintf "dprintf" "breakpoint") ":")
-                                                           gdb--available-breakpoint-types nil t nil nil
-                                                           (caar gdb--available-breakpoint-types))
-                                          gdb--available-breakpoint-types))
-                  thread (gdb--ask-for-thread thread)
-                  ignore-count (read-number "Ignore count: " (or ignore-count 0))
-                  condition (gdb--read-line "Condition: " condition))
-
-                 (when dprintf (setq format-args (gdb--read-line "Format and args: "))))
-
-               (when breakpoint-on-point
-                 (gdb--command (format "-break-delete %d" (gdb--breakpoint-number breakpoint-on-point))
-                               (cons 'gdb--context-breakpoint-delete breakpoint-on-point)))
-
-               (when (and location (or arg (not breakpoint-on-point)))
-                 (gdb--command (concat "-" (if dprintf "dprintf" "break") "-insert "
-                                       (and (> (length condition) 0) (concat "-c " (gdb--escape-argument condition) " "))
-                                       (and thread (format "-p %d " (gdb--thread-id thread)))
-                                       (and ignore-count (> ignore-count 0) (format "-i %d " ignore-count))
-                                       type "-f " (gdb--escape-argument location)
-                                       (when dprintf (concat " " format-args)))
-                               'gdb--context-breakpoint-insert nil t))))
-    (setq gdb--session gdb--session-temp))
-
-(defun gdb-pid (debuggee-pid)
-    "Start debugging an executable with DEBUGGEE-PID in the current session."
-    (interactive "spid: ")
-    (gdb-pid-internal debuggee-pid))
-
-(defun gdb-continue-all (&optional arg)
-  "Continues all GDB Sessions. If ARG is nil, try to resume threads in this order:
-            - Inferred thread if it is stopped
-            - Selected thread if it is stopped
-            - All threads
-          If ARG is non-nil, resume all threads unconditionally."
-  (interactive "P")
-  (setq gdb--session-temp gdb--session)
-  (cl-loop for session in gdb--sessions do
-           (setq gdb--session session)
-           (gdb--with-valid-session
-              (let* ((inferred-thread (gdb--infer-thread 'not-selected))
-                     (selected-thread (gdb--session-selected-thread session))
-                     (thread-to-resume
-                      (unless arg
-                        (cond
-                         ((and inferred-thread (string= (gdb--thread-state inferred-thread) "stopped")) inferred-thread)
-                         ((and selected-thread (string= (gdb--thread-state selected-thread) "stopped")) selected-thread)))))
-
-                (if (or arg (not thread-to-resume))
-                    (gdb--command "-exec-continue --all")
-                  (gdb--command "-exec-continue" nil thread-to-resume)))))
-  (setq gdb--session gdb--session-temp))
-
-(defun gdb-kill-all-session ()
-  "Kill all active GDB session."
-    (interactive)
-    (setq gdb--session-temp gdb--session)
-    (cl-loop for session in gdb--sessions do
-             (setq gdb--session session)
-             (gdb--kill-session (gdb--infer-session)))
-    (setq gdb--session gdb--session-temp))
-
-(defun executable-find (command)
-    "Search for COMMAND in `exec-path' and return the absolute file name.
-           Return nil if COMMAND is not found anywhere in `exec-path'."
-    ;; Use 1 rather than file-executable-p to better match the behavior of
-    ;; call-process.
-    (locate-file command exec-path exec-suffixes 1))
-
-(setq mpi-executable (executable-find "mpirun"))
-
-(defun string-trim-final-newline (string)
-  ;; trim the final \n if exists in a string.
-    (let ((len (length string)))
-      (cond
-       ((and (> len 0) (eql (aref string (- len 1)) ?\n))
-        (substring string 0 (- len 1)))
-       (t string))))
-
-(defun mpi-debug (path procs)
-    "Executes an mpi process with executable and number of procs. 
-           mpirun -n $procs $path.
-       Addionally, it spawn a debugger with each process pre-attached to the gdb on separate sessions."
-    (interactive
-     (list
-      (read-file-name "Enter Executable: ")
-      (read-string "Num of procs: ")
-      ))
-    (setq mpi-command (format "%s -n %s %s" mpi-executable procs path))
-    (with-output-to-temp-buffer mpi-command
-      (async-shell-command mpi-command mpi-command "*Messages*")
-      (pop-to-buffer mpi-command)
-      (setq proc_ids (shell-command-to-string (format "ps -aef | grep %s | grep -v grep | grep -v mpirun | awk '{print $2}'" path)))
-      (setq proc_ids (string-trim-final-newline proc_ids))
-      (setq proc_id_lists (split-string proc_ids "\n"))
-      (cl-loop for proc_id in proc_id_lists do
-               (gdb-pid-internal proc_id))
-      ))
-
 (use-package dap-mode
   ;; Uncomment the config below if you want all UI panes to be hidden by default!
   ;; :custom
@@ -652,6 +501,178 @@
     :keymaps 'lsp-mode-map
     :prefix lsp-keymap-prefix
     "d" '(dap-hydra t :wk "debugger")))
+
+;; GDB base package 
+      (use-package quelpa)
+      (require 'quelpa)
+      (use-package quelpa-use-package)
+      (require 'quelpa-use-package)
+      (use-package gdb-mi
+        :quelpa (gdb-mi :fetcher git
+                        :url "https://github.com/hariharan-devarajan/emacs-gdb.git"
+                        :files ("*.el" "*.c" "*.h" "Makefile"))
+        :init
+        (fmakunbound 'gdb)
+        (fmakunbound 'gdb-enable-debug))
+      ;; GDB functions to enhance functionality 
+      (defun gdb-pid-internal (debuggee-pid)
+        "Start debugging an executable with DEBUGGEE-PID in a new current session."
+        (let ((session (gdb-create-session)))
+          (setf (gdb--session-debuggee-path session) debuggee-pid)
+
+          (with-selected-frame (gdb--session-frame session)
+            (gdb--command (concat "attach " debuggee-pid))
+            (gdb--command "-file-list-exec-source-file" 'gdb--context-initial-file)
+            (gdb--rename-buffers-with-debuggee debuggee-pid))
+
+          (cl-loop for frame in (frame-list)
+                   when (eq (frame-parameter frame 'gdb--session) session)
+                   do (gdb--rename-frame frame))))
+
+      (defun gdb-toggle-breakpoint-all (&optional arg)
+        "Toggle breakpoint in all active gdb sessions location.
+                When ARG is non-nil, prompt for additional breakpoint settings.
+                If ARG is `dprintf' create a dprintf breakpoint instead."
+        (interactive "P")
+        (setq gdb--session-temp gdb--session)
+        (cl-loop for session in gdb--sessions do
+                 (setq gdb--session session) 
+                 (let ((breakpoint-on-point (gdb--infer-breakpoint session))
+                       (location (gdb--point-location))
+                       (dprintf (eq arg 'dprintf))
+                       type thread ignore-count condition format-args)
+                   (when (and (not location) breakpoint-on-point)
+                     (setq location (gdb--infer-breakpoint-location breakpoint-on-point)))
+
+                   (when (or arg (not location))
+                     (unless (string= (or location "")
+                                      (setq location (read-string (concat "Location: ") location)))
+                       (setq breakpoint-on-point nil))
+
+                     (when breakpoint-on-point
+                       (setq thread       (gdb--breakpoint-thread       breakpoint-on-point)
+                             ignore-count (gdb--breakpoint-ignore-count breakpoint-on-point)
+                             condition    (gdb--breakpoint-condition    breakpoint-on-point)))
+
+                     (setq
+                      type (cdr (assoc-string (completing-read (concat "Type of " (if dprintf "dprintf" "breakpoint") ":")
+                                                               gdb--available-breakpoint-types nil t nil nil
+                                                               (caar gdb--available-breakpoint-types))
+                                              gdb--available-breakpoint-types))
+                      thread (gdb--ask-for-thread thread)
+                      ignore-count (read-number "Ignore count: " (or ignore-count 0))
+                      condition (gdb--read-line "Condition: " condition))
+
+                     (when dprintf (setq format-args (gdb--read-line "Format and args: "))))
+
+                   (when breakpoint-on-point
+                     (gdb--command (format "-break-delete %d" (gdb--breakpoint-number breakpoint-on-point))
+                                   (cons 'gdb--context-breakpoint-delete breakpoint-on-point)))
+
+                   (when (and location (or arg (not breakpoint-on-point)))
+                     (gdb--command (concat "-" (if dprintf "dprintf" "break") "-insert "
+                                           (and (> (length condition) 0) (concat "-c " (gdb--escape-argument condition) " "))
+                                           (and thread (format "-p %d " (gdb--thread-id thread)))
+                                           (and ignore-count (> ignore-count 0) (format "-i %d " ignore-count))
+                                           type "-f " (gdb--escape-argument location)
+                                           (when dprintf (concat " " format-args)))
+                                   'gdb--context-breakpoint-insert nil t))))
+        (setq gdb--session gdb--session-temp))
+
+    (defun gdb-pid (debuggee-pid)
+        "Start debugging an executable with DEBUGGEE-PID in the current session."
+        (interactive "spid: ")
+        (gdb-pid-internal debuggee-pid))
+
+    (defun gdb-continue-all (&optional arg)
+      "Continues all GDB Sessions. If ARG is nil, try to resume threads in this order:
+                - Inferred thread if it is stopped
+                - Selected thread if it is stopped
+                - All threads
+              If ARG is non-nil, resume all threads unconditionally."
+      (interactive "P")
+      (setq gdb--session-temp gdb--session)
+      (cl-loop for session in gdb--sessions do
+               (setq gdb--session session)
+               (gdb--with-valid-session
+                  (let* ((inferred-thread (gdb--infer-thread 'not-selected))
+                         (selected-thread (gdb--session-selected-thread session))
+                         (thread-to-resume
+                          (unless arg
+                            (cond
+                             ((and inferred-thread (string= (gdb--thread-state inferred-thread) "stopped")) inferred-thread)
+                             ((and selected-thread (string= (gdb--thread-state selected-thread) "stopped")) selected-thread)))))
+
+                    (if (or arg (not thread-to-resume))
+                        (gdb--command "-exec-continue --all")
+                      (gdb--command "-exec-continue" nil thread-to-resume)))))
+      (setq gdb--session gdb--session-temp))
+
+    (defun gdb-kill-all-session ()
+      "Kill all active GDB session."
+        (interactive)
+        (setq gdb--session-temp gdb--session)
+        (cl-loop for session in gdb--sessions do
+                 (setq gdb--session session)
+                 (gdb--kill-session (gdb--infer-session)))
+        (setq gdb--session gdb--session-temp))
+
+    (defun executable-find (command)
+        "Search for COMMAND in `exec-path' and return the absolute file name.
+               Return nil if COMMAND is not found anywhere in `exec-path'."
+        ;; Use 1 rather than file-executable-p to better match the behavior of
+        ;; call-process.
+        (locate-file command exec-path exec-suffixes 1))
+
+    (setq mpi-executable (executable-find "mpirun"))
+
+    (defun string-trim-final-newline (string)
+      ;; trim the final \n if exists in a string.
+        (let ((len (length string)))
+          (cond
+           ((and (> len 0) (eql (aref string (- len 1)) ?\n))
+            (substring string 0 (- len 1)))
+           (t string))))
+
+    (defun mpi-debug (path procs)
+        "Executes an mpi process with executable and number of procs. 
+               mpirun -n $procs $path.
+           Addionally, it spawn a debugger with each process pre-attached to the gdb on separate sessions."
+        (interactive
+         (list
+          (read-file-name "Enter Executable: ")
+          (read-string "Num of procs: ")
+          ))
+        (setq mpi-command (format "%s -n %s %s" mpi-executable procs path))
+        (with-output-to-temp-buffer mpi-command
+          (async-shell-command mpi-command mpi-command "*Messages*")
+          (pop-to-buffer mpi-command)
+          (setq proc_ids (shell-command-to-string (format "ps -aef | grep %s | grep -v grep | grep -v mpirun | awk '{print $2}'" path)))
+          (setq proc_ids (string-trim-final-newline proc_ids))
+          (setq proc_id_lists (split-string proc_ids "\n"))
+          (cl-loop for proc_id in proc_id_lists do
+                   (gdb-pid-internal proc_id))
+          ))
+  (defun mpi-attach-debug (path)
+        "Executes an mpi process with executable and number of procs. 
+               mpirun -n $procs $path.
+           Addionally, it spawn a debugger with each process pre-attached to the gdb on separate sessions."
+        (interactive
+         (list
+          (read-file-name "Enter Executable: ")
+          ))
+        (setq path (file-name-nondirectory path))
+        (setq mpi-command (format "%s %s" mpi-executable path))
+        (with-output-to-temp-buffer mpi-command
+(setq pipe (format "ps -aef | grep %s | grep -v grep | grep -v mpirun | awk '{print $2}'" path))	
+          (message (format "Command %s" pipe))
+          (setq proc_ids (shell-command-to-string pipe))
+            (message (format "Process Ids to attach %s..." proc_ids))
+          (setq proc_ids (string-trim-final-newline proc_ids))
+          (setq proc_id_lists (split-string proc_ids "\n"))
+          (cl-loop for proc_id in proc_id_lists do
+                   (gdb-pid-internal proc_id))
+          ))
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -700,8 +721,8 @@
    (add-hook mode (lambda () (setq emacs-clang-rename-compile-commands-file (concat (projectile-project-root) "build/compile_commands.json"))))
    (add-hook mode (lambda () (setq projectile-project-compile-cmd "cmake --build . -j")))
    (add-hook mode (lambda () (setq projectile-project-test-cmd "ctest -vv")))
-   (add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake " (projectile-project-root) " -B "   (projectile-project-root) "build  -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1"))))
-    )
+   (add-hook mode (lambda () (setq projectile-project-configure-cmd (concat "rm -rf " (projectile-project-root) "build/* && cmake ../ -B ./ -DCMAKE_PREFIX_PATH=$HOME/install -DCMAKE_EXPORT_COMPILE_COMMANDS=1")))))
+
   (setq gc-cons-threshold (* 100 1024 1024)
         read-process-output-max (* 1024 1024)
         treemacs-space-between-root-nodes nil
@@ -736,13 +757,20 @@
   ("C-c p" . projectile-command-map)
   :init
   ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/projects")
-    (setq projectile-project-search-path '("~/projects")))
-  (setq projectile-switch-project-action #'projectile-dired))
+     (when (file-directory-p "~/projects")
+       (setq projectile-project-search-path '("~/projects")))
+     (setq projectile-switch-project-action #'projectile-dired))
 
 (use-package counsel-projectile
   :after projectile
   :config (counsel-projectile-mode))
+
+(use-package tramp
+  :config
+  (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash")))
+(setq tramp-chunksize 500)
+(setq tramp-default-method "sshx")
+(add-to-list 'tramp-remote-path "/mnt/common/hdevarajan/stage/spack/var/spack/environments/emacs/.spack-env/view/bin")
 
 (use-package magit
   :commands magit-status
@@ -810,7 +838,7 @@
 
   (with-eval-after-load 'esh-opt
     (setq eshell-destroy-buffer-when-process-dies t)
-    (setq eshell-visual-commands '("htop" "zsh" "vim")))
+    (setq eshell-visual-commands '("htop" "zsh" "vim" "ps")))
 
   (eshell-git-prompt-use-theme 'powerline))
 
