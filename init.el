@@ -661,18 +661,19 @@
          (list
           (read-file-name "Enter Executable: ")
           ))
+        (setq path (file-remote-p (file-truename path) 'localname))
         (setq path (file-name-nondirectory path))
         (setq mpi-command (format "%s %s" mpi-executable path))
-        (with-output-to-temp-buffer mpi-command
-(setq pipe (format "ps -aef | grep %s | grep -v grep | grep -v mpirun | awk '{print $2}'" path))	
+(setq pipe (format "ps -aef | grep '%s' | grep -v grep | grep -v mpirun | awk '{print $2}'" path))	
           (message (format "Command %s" pipe))
           (setq proc_ids (shell-command-to-string pipe))
-            (message (format "Process Ids to attach %s..." proc_ids))
+          (message (format "Process Ids to attach %s..." proc_ids))
           (setq proc_ids (string-trim-final-newline proc_ids))
           (setq proc_id_lists (split-string proc_ids "\n"))
           (cl-loop for proc_id in proc_id_lists do
                    (gdb-pid-internal proc_id))
-          ))
+          )
+(setq comint-prompt-read-only t)
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
