@@ -144,6 +144,7 @@
     "0" '(kill-all-gud-buffers :which-key "stop debugging")
     "w" '(gud-watch :which-key "add watch to variable")
     "t"  '(:ignore t :which-key "toggles")
+    "tf" '(other-frame :which-key "toggle frame")
     "ti" '(ivy-rich-mode :which-key "toggle ivy-rich-mode")))
 
 

@@ -12,7 +12,7 @@ int main(){
   int pid = getpid();
   printf("%d\n", pid);
   fflush(stdout);
-  if(rank == 0) {
+  if (rank == 0) {
     getchar();
   }
   MPI_Barrier(MPI_COMM_WORLD);
