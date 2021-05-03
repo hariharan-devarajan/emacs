@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <mpi.h>
 
-int main(){
-  MPI_Init(NULL, NULL);
+int main(int argc, char* argv[]){
+  MPI_Init(&argc, &argv);
   /* Get Rank and Comm from MPI*/
   int rank, comm_sz;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);

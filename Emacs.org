@@ -212,8 +212,8 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
       "t"  '(:ignore t :which-key "toggles")
       "tf" '(other-frame :which-key "toggle frame")
       "ti" '(ivy-rich-mode :which-key "toggle ivy-rich-mode")))
-  
-  
+
+
   (use-package evil
     :init
     (setq evil-want-integration t)
