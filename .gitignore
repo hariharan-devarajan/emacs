@@ -2,3 +2,5 @@
 /.cache/
 /examples/cpp/build/
 /examples/cpp/.cache/
+/spack.lock
+/.spack-env/
