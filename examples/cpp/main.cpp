@@ -1,3 +1,4 @@
+#include "mpi.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <mpi.h>
@@ -22,6 +23,7 @@ int main(int argc, char* argv[]){
   printf("hello1\n");
   printf("hello2\n");
   printf("hello3\n");
+  MPI_Finalize();
   return 0;
 }
 //gdb--sessions

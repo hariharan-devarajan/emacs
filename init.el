@@ -136,7 +136,7 @@
     "7" '(gdb-step :which-key "step into line")
     "9" '(gdb-continue-all :which-key "continue execution in all sessions")
     "5" '(gdb-continue :which-key "continue execution in current sessions")
-    "0" '(gdb-kill-all-sessions :which-key "stop debugging")
+    "0" '(gdb-kill-all-session :which-key "stop debugging")
     "k" '(kill-matching-buffers :which-key "kill matching buffers")
     "w" '(gud-watch :which-key "add watch to variable")
     "t"  '(:ignore t :which-key "toggles")
@@ -486,6 +486,7 @@
   :config
   (global-aggressive-indent-mode 1)
   (add-to-list 'aggressive-indent-excluded-modes 'html-mode)
+  (add-to-list 'aggressive-indent-excluded-modes 'prog-mode)
   (add-hook 'emacs-lisp-mode-hook #'aggressive-indent-mode))
 
 (use-package dap-mode
@@ -712,8 +713,8 @@
   (helm-mode)
   (require 'helm-xref)
   (require 'clang-format+)
-  (add-hook 'c-mode-common-hook #'clang-format+-mode)
-  (setq clang-format+-always-enable t)
+  ;; (add-hook 'c-mode-common-hook #'clang-format+-mode)
+  ;; (setq clang-format+-always-enable t)
   (which-key-mode)
   (dolist (mode '(c-mode-hook
                   c++-mode-hook))
